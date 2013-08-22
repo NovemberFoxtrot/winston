@@ -48,11 +48,23 @@ func (w1 *Winston) FreqProduct(w2 *Winston) (sum int) {
 	return
 }
 
-func (w1 *Winston) Pearson(w2 *Winston) {
-	sumW1 := w1.FreqSum()
-	sumW2 := w2.FreqSum()
+func (w1 *Winston) Pearson(w2 *Winston) float64 {
+	sum1 := float64(w1.FreqSum())
+	sum2 := float64(w2.FreqSum())
+	sumsq1 := w1.FreqSquare()
+	sumsq2 := w2.FreqSquare()
+	sump := float64(w1.FreqProduct(w2))
 
-	fmt.Println(sumW1, sumW2)
+	n := float64(len(w1.Freq))
+
+	num := sump - ((sum1 * sum2) / n)
+	den := math.Sqrt((sumsq1 - (math.Pow(sum1, 2))/n) * (sumsq2 - (math.Pow(sum2, 2))/n))
+
+	if den == 0 {
+		return 0
+	}
+
+	return num / den
 }
 
 func (w *Winston) CleanText() {
@@ -128,7 +140,8 @@ func main() {
 	n := 0
 
 	for n < (len(winstons) - 1) {
-		winstons[n].Pearson(&winstons[n+1])
+		sim := winstons[n].Pearson(&winstons[n+1])
+		fmt.Println(sim)
 		n += 1
 	}
 }
