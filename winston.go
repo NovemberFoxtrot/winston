@@ -12,6 +12,14 @@ import (
 	"strings"
 )
 
+type BiCluster struct {
+	left     *Winston
+	right    *Winston
+	vec      float64
+	id       int64
+	distance float64
+}
+
 func checkerror(err error) {
 	if err != nil {
 		log.Fatal("[ERROR]", err)
@@ -68,12 +76,12 @@ func (w1 *Winston) Pearson(w2 *Winston) float64 {
 	sump := float64(w1.FreqProduct(w2))
 	n := float64(len(w1.Freq))
 
-	fmt.Println(sum1, sum2, sumsq1, sumsq2, sump, n)
+	// fmt.Println(sum1, sum2, sumsq1, sumsq2, sump, n)
 
 	num := sump - ((sum1 * sum2) / n)
 	den := math.Sqrt((sumsq1 - (math.Pow(sum1, 2))/n) * (sumsq2 - (math.Pow(sum2, 2))/n))
 
-	fmt.Println(num, den)
+	// fmt.Println(num, den)
 
 	if den == 0 {
 		return 0
@@ -152,10 +160,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	for _, w1 := range winstons {
-		for _, w2 := range winstons {
-			sim := w1.Pearson(&w2)
-			fmt.Println(sim)
+	// biclusters := make(map[string]BiCluster)
+
+	for n := 0; n < len(winstons); n++ {
+		for m := n + 1; m < len(winstons); m++ {
+			dis := winstons[n].Pearson(&winstons[m])
+			bic := &BiCluster{left: &winstons[n], right: &winstons[m], distance: dis}
+			fmt.Println(bic)
 		}
 	}
 }
