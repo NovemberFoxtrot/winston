@@ -13,10 +13,10 @@ import (
 )
 
 type BiCluster struct {
-	left     *Winston
-	right    *Winston
+	left     int
+	right    int
 	vec      float64
-	id       int64
+	id       int
 	distance float64
 }
 
@@ -160,13 +160,23 @@ func main() {
 		os.Exit(1)
 	}
 
-	// biclusters := make(map[string]BiCluster)
+	biclusters := make([]BiCluster, 0)
 
 	for n := 0; n < len(winstons); n++ {
+		closestm := -1
+		closestdis := -1.0
 		for m := n + 1; m < len(winstons); m++ {
 			dis := winstons[n].Pearson(&winstons[m])
-			bic := &BiCluster{left: &winstons[n], right: &winstons[m], distance: dis}
-			fmt.Println(bic)
+			if closestdis < dis {
+				closestdis = dis
+				closestm = m
+			}
+
 		}
+
+		bic := BiCluster{id: n, left: n, right: closestm, distance: closestdis}
+		biclusters = append(biclusters, bic)
 	}
+
+	fmt.Println(biclusters)
 }
