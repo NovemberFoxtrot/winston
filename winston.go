@@ -117,6 +117,8 @@ func (w *Winston) CalcGrams() {
 	for _, gram := range w.Grams {
 		w.Freq[gram] += 1
 	}
+
+	fmt.Println(w.Freq)
 }
 
 func (w *Winston) FetchUrl(theurl string) {
