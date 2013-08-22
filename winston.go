@@ -1,4 +1,4 @@
-package main
+package winston
 
 import (
 	"fmt"
@@ -146,7 +146,7 @@ func (w *Winston) FetchUrl(theurl string) {
 
 	w.Text = string(body)
 }
-
+/*
 func main() {
 	winstons := make([]Winston, 0)
 
@@ -182,3 +182,4 @@ func main() {
 
 	fmt.Println(biclusters)
 }
+*/
