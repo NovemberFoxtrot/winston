@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 )
 
 func checkerror(err error) {
@@ -17,7 +18,11 @@ func checkerror(err error) {
 
 type Winston struct {
 	Text  string
-	words []string
+	Words []string
+}
+
+func (w *Winston) CalcWords() {
+	w.Words = strings.Split(w.Text, ` `)
 }
 
 func (w *Winston) FetchUrl(theurl string) {
@@ -54,6 +59,7 @@ func main() {
 	var w Winston
 
 	w.FetchUrl(os.Args[1])
+	w.CalcWords()
 
-	fmt.Println(w.Text)
+	fmt.Println(len(w.Text), len(w.Words))
 }
