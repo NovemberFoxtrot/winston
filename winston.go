@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"math"
 	"net/http"
 	"net/url"
 	"os"
@@ -21,6 +22,37 @@ type Winston struct {
 	Text  string
 	Grams []string
 	Freq  map[string]int
+}
+
+func (w *Winston) FreqSum() (sum int) {
+	for _, count := range w.Freq {
+		sum += count
+	}
+
+	return
+}
+
+func (w *Winston) FreqSquare() (sum float64) {
+	for _, count := range w.Freq {
+		sum += math.Pow(float64(count), 2)
+	}
+
+	return
+}
+
+func (w1 *Winston) FreqProduct(w2 *Winston) (sum int) {
+	for key, count := range w1.Freq {
+		sum += count * w2.Freq[key]
+	}
+
+	return
+}
+
+func (w1 *Winston) Pearson(w2 *Winston) {
+	sumW1 := w1.FreqSum()
+	sumW2 := w2.FreqSum()
+
+	fmt.Println(sumW1, sumW2)
 }
 
 func (w *Winston) CleanText() {
@@ -87,5 +119,16 @@ func main() {
 		w.CalcGrams()
 		fmt.Println(len(w.Text), len(w.Grams), len(w.Freq))
 		winstons = append(winstons, w)
+	}
+
+	if len(winstons) < 1 {
+		os.Exit(1)
+	}
+
+	n := 0
+
+	for n < (len(winstons) - 1) {
+		winstons[n].Pearson(&winstons[n+1])
+		n += 1
 	}
 }
