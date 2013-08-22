@@ -24,6 +24,18 @@ type Winston struct {
 	Freq  map[string]int
 }
 
+func (w1 *Winston) CommonFreqKeys(w2 *Winston) []string {
+	common := make([]string, 0)
+
+	for key, _ := range w1.Freq {
+		if w2.Freq[key] != 0 {
+			common = append(common, key)
+		}
+	}
+
+	return common
+}
+
 func (w *Winston) FreqSum() (sum int) {
 	for _, count := range w.Freq {
 		sum += count
@@ -41,8 +53,8 @@ func (w *Winston) FreqSquare() (sum float64) {
 }
 
 func (w1 *Winston) FreqProduct(w2 *Winston) (sum int) {
-	for key, count := range w1.Freq {
-		sum += count * w2.Freq[key]
+	for _, key := range w1.CommonFreqKeys(w2) {
+		sum += w1.Freq[key] * w2.Freq[key]
 	}
 
 	return
@@ -54,11 +66,14 @@ func (w1 *Winston) Pearson(w2 *Winston) float64 {
 	sumsq1 := w1.FreqSquare()
 	sumsq2 := w2.FreqSquare()
 	sump := float64(w1.FreqProduct(w2))
-
 	n := float64(len(w1.Freq))
+
+	fmt.Println(sum1, sum2, sumsq1, sumsq2, sump, n)
 
 	num := sump - ((sum1 * sum2) / n)
 	den := math.Sqrt((sumsq1 - (math.Pow(sum1, 2))/n) * (sumsq2 - (math.Pow(sum2, 2))/n))
+
+	fmt.Println(num, den)
 
 	if den == 0 {
 		return 0
@@ -137,11 +152,10 @@ func main() {
 		os.Exit(1)
 	}
 
-	n := 0
-
-	for n < (len(winstons) - 1) {
-		sim := winstons[n].Pearson(&winstons[n+1])
-		fmt.Println(sim)
-		n += 1
+	for _, w1 := range winstons {
+		for _, w2 := range winstons {
+			sim := w1.Pearson(&w2)
+			fmt.Println(sim)
+		}
 	}
 }
