@@ -1,7 +1,6 @@
 package winston
 
 import (
-	"fmt"
 	"io/ioutil"
 	"log"
 	"math"
@@ -20,10 +19,10 @@ func CheckError(err error) {
 
 type Winston struct {
 	Location string
-	Text  string
-	SafeText  string
-	Grams []string
-	Freq  map[string]int
+	Text     string
+	SafeText string
+	Grams    []string
+	Freq     map[string]int
 }
 
 func (w1 *Winston) CommonFreqKeys(w2 *Winston) []string {
@@ -111,8 +110,6 @@ func (w *Winston) CalcGrams() {
 	for _, gram := range w.Grams {
 		w.Freq[gram] += 1
 	}
-
-	fmt.Println(w.SafeText)
 }
 
 func (w *Winston) FetchUrl(theurl string) {
