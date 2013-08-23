@@ -19,6 +19,7 @@ func CheckError(err error) {
 }
 
 type Winston struct {
+	Location string
 	Text  string
 	SafeText  string
 	Grams []string
