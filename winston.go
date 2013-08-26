@@ -69,12 +69,8 @@ func (w1 *Winston) Pearson(w2 *Winston) float64 {
 	sump := float64(w1.FreqProduct(w2))
 	n := float64(len(w1.Freq))
 
-	// fmt.Println(sum1, sum2, sumsq1, sumsq2, sump, n)
-
 	num := sump - ((sum1 * sum2) / n)
 	den := math.Sqrt((sumsq1 - (math.Pow(sum1, 2))/n) * (sumsq2 - (math.Pow(sum2, 2))/n))
-
-	// fmt.Println(num, den)
 
 	if den == 0 {
 		return 0
@@ -104,7 +100,7 @@ func (w *Winston) CleanText() {
 func (w *Winston) CalcGrams() {
 	w.CleanText()
 
-	w.Grams = strings.Split(w.Text, ` `)
+	w.Grams = strings.Split(w.SafeText, ` `)
 	w.Freq = make(map[string]int)
 
 	for _, gram := range w.Grams {
