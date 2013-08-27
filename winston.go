@@ -2,16 +2,11 @@ package winston
 
 import (
 	"fmt"
-	"io/ioutil"
+	"leonard"
 	"math"
-	"net"
-	"net/http"
-	"net/url"
-	"os"
 	"regexp"
 	"sir"
 	"strings"
-	"time"
 	"unicode"
 )
 
@@ -52,7 +47,7 @@ func IndexDataLen() int {
 func Add(website string) {
 	var d document
 	d.location = website
-	d.fetchUrl(website)
+	d.text = leonard.FetchUrl(website)
 	d.CalcGrams()
 	documents = append(documents, d)
 
@@ -167,54 +162,6 @@ func (d *document) CalcGrams() {
 	for _, gram := range d.grams {
 		d.freq[gram] += 1
 	}
-}
-
-type Config struct {
-	ConnectTimeout   time.Duration
-	ReadWriteTimeout time.Duration
-}
-
-func TimeoutDialer(cTimeout time.Duration, rwTimeout time.Duration) func(net, addr string) (c net.Conn, err error) {
-	return func(netw, addr string) (net.Conn, error) {
-		conn, err := net.DialTimeout(netw, addr, cTimeout)
-		if err != nil {
-			return nil, err
-		}
-		conn.SetDeadline(time.Now().Add(rwTimeout))
-		return conn, nil
-	}
-}
-
-func (w *document) fetchUrl(theurl string) {
-	var client *http.Client
-
-	if proxy := os.Getenv("http_proxy"); proxy != `` {
-		proxyUrl, err := url.Parse(proxy)
-		sir.CheckError(err)
-
-		transport := http.Transport{
-			// Dial: TimeoutDialer(connectTimeout, readWriteTimeout),
-			Dial:  TimeoutDialer(1*time.Second, 1*time.Second),
-			Proxy: http.ProxyURL(proxyUrl),
-		}
-
-		client = &http.Client{Transport: &transport}
-	} else {
-		client = &http.Client{}
-	}
-
-	req, err := http.NewRequest(`GET`, theurl, nil)
-	sir.CheckError(err)
-
-	resp, err := client.Do(req)
-	sir.CheckError(err)
-
-	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
-	sir.CheckError(err)
-
-	w.text = string(body)
 }
 
 var documents []document
