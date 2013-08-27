@@ -4,12 +4,14 @@ import (
 	"fmt"
 	"io/ioutil"
 	"math"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
 	"regexp"
 	"sir"
 	"strings"
+	"time"
 	"unicode"
 )
 
@@ -44,7 +46,7 @@ func Query(query string) []string {
 }
 
 func IndexDataLen() int {
-  return len(theindex.data) 
+	return len(theindex.data)
 }
 
 func Add(website string) {
@@ -167,6 +169,22 @@ func (d *document) CalcGrams() {
 	}
 }
 
+type Config struct {
+	ConnectTimeout   time.Duration
+	ReadWriteTimeout time.Duration
+}
+
+func TimeoutDialer(cTimeout time.Duration, rwTimeout time.Duration) func(net, addr string) (c net.Conn, err error) {
+	return func(netw, addr string) (net.Conn, error) {
+		conn, err := net.DialTimeout(netw, addr, cTimeout)
+		if err != nil {
+			return nil, err
+		}
+		conn.SetDeadline(time.Now().Add(rwTimeout))
+		return conn, nil
+	}
+}
+
 func (w *document) fetchUrl(theurl string) {
 	var client *http.Client
 
@@ -174,7 +192,13 @@ func (w *document) fetchUrl(theurl string) {
 		proxyUrl, err := url.Parse(proxy)
 		sir.CheckError(err)
 
-		client = &http.Client{Transport: &http.Transport{Proxy: http.ProxyURL(proxyUrl)}}
+		transport := http.Transport{
+			// Dial: TimeoutDialer(connectTimeout, readWriteTimeout),
+			Dial:  TimeoutDialer(1*time.Second, 1*time.Second),
+			Proxy: http.ProxyURL(proxyUrl),
+		}
+
+		client = &http.Client{Transport: &transport}
 	} else {
 		client = &http.Client{}
 	}
