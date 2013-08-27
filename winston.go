@@ -18,6 +18,7 @@ type Document struct {
 	Sentences []int
 	Grams     []string
 	Freq      map[string]int
+	BiFreq    map[string]int
 }
 
 func (d1 *Document) CommonFreqKeys(d2 *Document) []string {
