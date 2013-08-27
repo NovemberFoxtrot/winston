@@ -2,7 +2,6 @@ package winston
 
 import (
 	"fmt"
-	"leonard"
 	"math"
 	"regexp"
 	"sir"
@@ -10,113 +9,71 @@ import (
 	"unicode"
 )
 
-type indexData map[string][]*document
+type Documents []*Document
 
-type index struct {
-	data indexData
+type Document struct {
+	Location  string
+	Text      string
+	SafeText  string
+	Sentences []int
+	Grams     []string
+	Freq      map[string]int
 }
 
-func (i *index) update(w *document) {
-	for _, gram := range w.grams {
-		if i.data[gram] == nil {
-			i.data[gram] = make([]*document, 0)
-		}
-		i.data[gram] = append(i.data[gram], w)
-	}
-}
-
-type QueryResult struct {
-	Location string
-	Sentence string
-}
-
-func Query(query string) []QueryResult {
-	results := make([]QueryResult, 0)
-
-	for _, doc := range documents {
-		for index := 0; index < len(doc.sentences)-1; index++ {
-			s := doc.sentences[index]
-			e := doc.sentences[index+1]
-			if strings.Contains(doc.text[s:e], query) {
-				qr := QueryResult{Location: doc.location, Sentence: doc.text[s:e]}
-				results = append(results, qr)
-			}
-		}
-	}
-
-	return results
-}
-
-func IndexDataLen() int {
-	return len(theindex.data)
-}
-
-func Add(website string) {
-	var d document
-	d.location = website
-	d.text = leonard.FetchUrl(website)
-	d.CalcGrams()
-	documents = append(documents, d)
-	theindex.update(&d)
-}
-
-type document struct {
-	location  string
-	text      string
-	safeText  string
-	sentences []int
-	grams     []string
-	freq      map[string]int
-}
-
-func (d1 *document) CommonFreqKeys(d2 *document) []string {
+func (d1 *Document) CommonFreqKeys(d2 *Document) []string {
 	common := make([]string, 0)
-	for key, _ := range d1.freq {
-		if d2.freq[key] != 0 {
+
+	for key, _ := range d1.Freq {
+		if d2.Freq[key] != 0 {
 			common = append(common, key)
 		}
 	}
+
 	return common
 }
 
-func (w *document) FreqSum() (sum int) {
-	for _, count := range w.freq {
+func (w *Document) FreqSum() (sum int) {
+	for _, count := range w.Freq {
 		sum += count
 	}
+
 	return
 }
 
-func (w *document) FreqSquare() (sum float64) {
-	for _, count := range w.freq {
+func (w *Document) FreqSquare() (sum float64) {
+	for _, count := range w.Freq {
 		sum += math.Pow(float64(count), 2)
 	}
+
 	return
 }
 
-func (w1 *document) FreqProduct(w2 *document) (sum int) {
+func (w1 *Document) FreqProduct(w2 *Document) (sum int) {
 	for _, key := range w1.CommonFreqKeys(w2) {
-		sum += w1.freq[key] * w2.freq[key]
+		sum += w1.Freq[key] * w2.Freq[key]
 	}
+
 	return
 }
 
-func (w1 *document) Pearson(w2 *document) float64 {
+func (w1 *Document) Pearson(w2 *Document) float64 {
 	sum1 := float64(w1.FreqSum())
 	sum2 := float64(w2.FreqSum())
 	sumsq1 := w1.FreqSquare()
 	sumsq2 := w2.FreqSquare()
 	sump := float64(w1.FreqProduct(w2))
-	n := float64(len(w1.freq))
+	n := float64(len(w1.Freq))
 	num := sump - ((sum1 * sum2) / n)
 	den := math.Sqrt((sumsq1 - (math.Pow(sum1, 2))/n) * (sumsq2 - (math.Pow(sum2, 2))/n))
 
 	if den == 0 {
 		return 0
 	}
+
 	return num / den
 }
 
-func (w *document) CleanText() {
+func (w *Document) CleanText() {
 	asciiregexp, err := regexp.Compile("[^A-Za-z ]+")
 	sir.CheckError(err)
 
@@ -126,47 +83,45 @@ func (w *document) CleanText() {
 	spaceregexp, err := regexp.Compile("[ ]+")
 	sir.CheckError(err)
 
-	w.safeText = tagregexp.ReplaceAllString(w.text, " ")
-	w.safeText = asciiregexp.ReplaceAllString(w.safeText, " ")
-	w.safeText = spaceregexp.ReplaceAllString(w.safeText, " ")
-	w.safeText = strings.Trim(w.safeText, "")
-	w.safeText = strings.ToLower(w.safeText)
-	w.safeText = strings.TrimSpace(w.safeText)
+	w.SafeText = tagregexp.ReplaceAllString(w.Text, " ")
+	w.SafeText = asciiregexp.ReplaceAllString(w.SafeText, " ")
+	w.SafeText = spaceregexp.ReplaceAllString(w.SafeText, " ")
+	w.SafeText = strings.Trim(w.SafeText, "")
+	w.SafeText = strings.ToLower(w.SafeText)
+	w.SafeText = strings.TrimSpace(w.SafeText)
 }
 
-func (w *document) MarkSentenceBoundaries() {
-	w.sentences = make([]int, 0)
+func (w *Document) MarkSentenceBoundaries() {
+	w.Sentences = make([]int, 0)
 
-	for index, r := range w.text {
+	for index, r := range w.Text {
 		if !unicode.IsLetter(r) && r == 46 {
-			w.sentences = append(w.sentences, index)
+			w.Sentences = append(w.Sentences, index)
 		}
 	}
 }
 
-func (w *document) FetchSentences() {
-	for i := 0; i < (len(w.sentences) - 1); i++ {
-		fmt.Println(i, w.text[w.sentences[i]:w.sentences[i+1]])
+func (w *Document) FetchSentences() {
+	for i := 0; i < (len(w.Sentences) - 1); i++ {
+		fmt.Println(i, w.Text[w.Sentences[i]:w.Sentences[i+1]])
 	}
 }
 
-func (d *document) CalcGrams() {
+func (d *Document) CalcGrams() {
 	d.CleanText()
 
 	d.MarkSentenceBoundaries()
 
-	d.grams = strings.Split(d.safeText, ` `)
-	d.freq = make(map[string]int)
+	d.Grams = strings.Split(d.SafeText, ` `)
+	d.Freq = make(map[string]int)
 
-	for _, gram := range d.grams {
-		d.freq[gram] += 1
+	for _, gram := range d.Grams {
+		d.Freq[gram] += 1
 	}
 }
 
-var documents []document
-var theindex index
+var TheDocuments []Document
 
 func init() {
-	documents = make([]document, 0)
-	theindex.data = make(map[string][]*document)
+	TheDocuments = make([]Document, 0)
 }
