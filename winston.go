@@ -21,18 +21,25 @@ func (i *index) update(w *document) {
 		if i.data[gram] == nil {
 			i.data[gram] = make([]*document, 0)
 		}
-
 		i.data[gram] = append(i.data[gram], w)
 	}
 }
 
-func Query(query string) []string {
-	results := make([]string, 0)
+type QueryResult struct {
+	Location string
+	Sentence string
+}
 
-	for key, values := range theindex.data {
-		if key == query {
-			for _, d := range values {
-				results = append(results, d.location)
+func Query(query string) []QueryResult {
+	results := make([]QueryResult, 0)
+
+	for _, doc := range documents {
+		for index := 0; index < len(doc.sentences)-1; index++ {
+			s := doc.sentences[index]
+			e := doc.sentences[index+1]
+			if strings.Contains(doc.text[s:e], query) {
+				qr := QueryResult{Location: doc.location, Sentence: doc.text[s:e]}
+				results = append(results, qr)
 			}
 		}
 	}
@@ -50,7 +57,6 @@ func Add(website string) {
 	d.text = leonard.FetchUrl(website)
 	d.CalcGrams()
 	documents = append(documents, d)
-
 	theindex.update(&d)
 }
 
@@ -65,13 +71,11 @@ type document struct {
 
 func (d1 *document) CommonFreqKeys(d2 *document) []string {
 	common := make([]string, 0)
-
 	for key, _ := range d1.freq {
 		if d2.freq[key] != 0 {
 			common = append(common, key)
 		}
 	}
-
 	return common
 }
 
@@ -79,7 +83,6 @@ func (w *document) FreqSum() (sum int) {
 	for _, count := range w.freq {
 		sum += count
 	}
-
 	return
 }
 
@@ -87,7 +90,6 @@ func (w *document) FreqSquare() (sum float64) {
 	for _, count := range w.freq {
 		sum += math.Pow(float64(count), 2)
 	}
-
 	return
 }
 
@@ -95,7 +97,6 @@ func (w1 *document) FreqProduct(w2 *document) (sum int) {
 	for _, key := range w1.CommonFreqKeys(w2) {
 		sum += w1.freq[key] * w2.freq[key]
 	}
-
 	return
 }
 
@@ -106,14 +107,12 @@ func (w1 *document) Pearson(w2 *document) float64 {
 	sumsq2 := w2.FreqSquare()
 	sump := float64(w1.FreqProduct(w2))
 	n := float64(len(w1.freq))
-
 	num := sump - ((sum1 * sum2) / n)
 	den := math.Sqrt((sumsq1 - (math.Pow(sum1, 2))/n) * (sumsq2 - (math.Pow(sum2, 2))/n))
 
 	if den == 0 {
 		return 0
 	}
-
 	return num / den
 }
 
